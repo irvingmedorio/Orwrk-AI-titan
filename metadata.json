@@ -1,0 +1,5 @@
+{
+  "name": "Onwrk-AI Titan Interface",
+  "description": "A web interface for Onwrk-AI Titan, an autonomous AI agent development studio. It provides a real-time dashboard for monitoring agent status, system metrics, and LLM performance, along with a chat interface for interacting with the AI team.",
+  "requestFramePermissions": []
+}
