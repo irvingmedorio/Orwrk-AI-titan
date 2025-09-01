@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+celery
+redis
+python-socketio
+pymicrosoftautogen
+langchain
+chromadb-client
+pydantic
+python-dotenv

@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # Frontend Service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    networks:
+      - onwrk_network
+    restart: unless-stopped
+
+  # Backend API Service (FastAPI)
+  backend-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - workspaces:/workspaces
+    networks:
+      - onwrk_network
+    depends_on:
+      redis:
+        condition: service_started
+      llama-cpp:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    restart: unless-stopped
+
+  # Celery Worker for Background Tasks
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.core.celery_app worker --loglevel=info
+    env_file:
+      - ./backend/.env
+    volumes:
+      - workspaces:/workspaces
+    networks:
+      - onwrk_network
+    depends_on:
+      - redis
+      - backend-api
+    restart: unless-stopped
+
+  # Redis for Celery Broker & Caching
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - onwrk_network
+    restart: unless-stopped
+
+  # ChromaDB for Vector Storage
+  chromadb:
+    image: chromadb/chroma:0.4.24
+    ports:
+      - "8001:8000" # Exposing on 8001 to avoid conflict with backend-api
+    networks:
+      - onwrk_network
+    restart: unless-stopped
+
+  # Llama.cpp Server for Local LLM
+  llama-cpp:
+    # Using a public image from Docker Hub to provide an OpenAI-compatible API server.
+    # This replaces the ghcr.io image which had access issues in the environment.
+    image: phidata/llama-cpp-python:0.2.77
+    # The user must place their model in a 'models' directory in the root
+    # The model name will be passed via .env file
+    volumes:
+      - ./models:/models
+    ports:
+      - "8081:8080" # Exposing on 8081 to avoid local conflicts
+    networks:
+      - onwrk_network
+    # The command will be set via LLAMA_CPP_COMMAND in the .env file
+    # Example: command: --model /models/LFM2-1.2B-Q4_0.gguf --host 0.0.0.0 --port 8080
+    # This will be configured in the .env file for flexibility.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+networks:
+  onwrk_network:
+    driver: bridge
+
+volumes:
+  workspaces:
+    driver: local
