@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Agent, AgentName, AgentStatus, SystemMetrics, LlmMetrics, ChatMessage, ConfirmationState, ScheduledTask, TaskStatus, View, TaskSuggestion, ChatSession, Project, ProjectStatus, AutomationFlow, AutomationSession, AutomationCommand, AutomationCommandStatus, AutomationCommandType, FileSystemItem, FileType, TerminalLine, CommandSuggestion, WebIntelligenceSuggestion, DeepReasoningState, DeepReasoningStage, ApiIntegration, ApiIntegrationId, ApiActionSuggestion, WebIntelligenceMission, WebIntelligenceStatus, VoiceAgentState, VoiceChatMessage, AutomaticNote, EditableAgent, DefaultAgentNames } from '../types';
+import { Agent, AgentName, AgentStatus, SystemMetrics, LlmMetrics, ChatMessage, ConfirmationState, ScheduledTask, TaskStatus, View, TaskSuggestion, ChatSession, Project, ProjectStatus, AutomationFlow, AutomationSession, AutomationCommand, AutomationCommandStatus, AutomationCommandType, FileSystemItem, FileType, TerminalLine, CommandSuggestion, WebIntelligenceSuggestion, DeepReasoningState, DeepReasoningStage, ApiIntegration, ApiIntegrationId, ApiActionSuggestion, WebIntelligenceMission, WebIntelligenceStatus, VoiceAgentState, VoiceChatMessage, AutomaticNote, AgendaItem, EditableAgent, DefaultAgentNames } from '../types';
 
 type Language = 'en' | 'es';
 
@@ -61,6 +61,9 @@ interface AgentState {
   addVoiceChatMessage: (message: VoiceChatMessage) => void;
   generateNote: (noteText: string) => void;
   deleteAutomaticNote: (noteId: string) => void;
+  addAgendaItem: (content: string) => void;
+  toggleAgendaItem: (itemId: string) => void;
+  deleteAgendaItem: (itemId: string) => void;
   clearVoiceAgentState: () => void;
 }
 
@@ -82,6 +85,7 @@ const initialVoiceAgentState: VoiceAgentState = {
     isRecording: false,
     voiceChatHistory: [],
     automaticNotes: [],
+    agenda: [],
 };
 
 const initialScheduledTasks: ScheduledTask[] = [
@@ -616,6 +620,24 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       voiceAgentState: {
           ...state.voiceAgentState,
           automaticNotes: state.voiceAgentState.automaticNotes.filter(note => note.id !== noteId),
+      }
+  })),
+  addAgendaItem: (content: string) => set(state => ({
+      voiceAgentState: {
+          ...state.voiceAgentState,
+          agenda: [...state.voiceAgentState.agenda, { id: `agenda-${Date.now()}`, content, completed: false }],
+      }
+  })),
+  toggleAgendaItem: (itemId: string) => set(state => ({
+      voiceAgentState: {
+          ...state.voiceAgentState,
+          agenda: state.voiceAgentState.agenda.map(item => item.id === itemId ? { ...item, completed: !item.completed } : item),
+      }
+  })),
+  deleteAgendaItem: (itemId: string) => set(state => ({
+      voiceAgentState: {
+          ...state.voiceAgentState,
+          agenda: state.voiceAgentState.agenda.filter(item => item.id !== itemId),
       }
   })),
   clearVoiceAgentState: () => set({ voiceAgentState: initialVoiceAgentState }),

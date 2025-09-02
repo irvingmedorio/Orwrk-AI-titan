@@ -281,8 +281,15 @@ export interface AutomaticNote {
     content: string;
 }
 
+export interface AgendaItem {
+    id: string;
+    content: string;
+    completed: boolean;
+}
+
 export interface VoiceAgentState {
     isRecording: boolean;
     voiceChatHistory: VoiceChatMessage[];
     automaticNotes: AutomaticNote[];
+    agenda: AgendaItem[];
 }
