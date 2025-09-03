@@ -13,11 +13,6 @@ try:  # Optional imports so the backend can run without these packages installed
 except Exception:  # pragma: no cover - library is optional
     OpenAI = None  # type: ignore
 
-try:  # Gemini / Google Generative AI
-    import google.generativeai as genai  # type: ignore
-except Exception:  # pragma: no cover - library is optional
-    genai = None  # type: ignore
-
 
 class LLMClient:
     """Small helper that routes chat completions to the configured provider."""
@@ -53,14 +48,6 @@ class LLMClient:
                 messages=messages,
             )
             return resp.choices[0].message.content or ""
-
-        if self.provider == "gemini" and genai and settings.gemini_api_key:
-            genai.configure(api_key=settings.gemini_api_key)
-            model = genai.GenerativeModel(settings.gemini_model)
-            # Gemini expects plain text; join the conversation for context
-            joined = "\n".join(m["content"] for m in messages)
-            resp = model.generate_content(joined)
-            return getattr(resp, "text", "")
 
         # Default: local llama.cpp OpenAI‑compatible endpoint
         payload = {"model": self.model, "messages": messages}

@@ -15,8 +15,6 @@ class Settings(BaseSettings):
     models_dir: str = Field("models", env="MODELS_DIR")
     openai_api_key: str | None = Field(None, env="OPENAI_API_KEY")
     openai_model: str = Field("gpt-4o-mini", env="OPENAI_MODEL")
-    gemini_api_key: str | None = Field(None, env="GEMINI_API_KEY")
-    gemini_model: str = Field("gemini-1.5-pro", env="GEMINI_MODEL")
     redis_url: str = Field("redis://redis:6379/0", env="REDIS_URL")
     chroma_url: str = Field("http://chromadb:8000", env="CHROMA_URL")
     frontend_backup_dir: str = Field("frontend-backup", env="FRONTEND_BACKUP_DIR")

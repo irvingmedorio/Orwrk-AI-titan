@@ -2,11 +2,9 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# Onwrk-AI
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/drive/1sg9THwVyzpUTtXPjgSREocn4rZ24dD8w
+Everything you need to run this autonomous development studio locally.
 
 ## Run Locally
 
@@ -31,9 +29,9 @@ Install the following programs before cloning the repository:
    cp backend/.env.example backend/.env
    # edit backend/.env and .env.local with API keys and model paths
    ```
-   The backend supports local llama.cpp, OpenAI, or Gemini models. Set `LLM_PROVIDER`
-   to `local`, `openai`, or `gemini` and provide the corresponding `OPENAI_API_KEY`
-   or `GEMINI_API_KEY` in `backend/.env`.
+   The backend supports local llama.cpp or OpenAI models. Set `LLM_PROVIDER`
+   to `local` or `openai` and provide the corresponding `OPENAI_API_KEY`
+   in `backend/.env`.
 3. Install frontend dependencies:
    ```bash
    npm install
@@ -69,8 +67,7 @@ This builds the frontend, validates the backend, and produces `onwrk-ai-titan-lo
 
 For frontend-only development without Docker:
 
-1. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key.
-2. Run the app:
+1. Run the app:
    ```bash
    npm run dev
    ```
@@ -93,7 +90,7 @@ The FastAPI backend exposes endpoints to coordinate agents and local processing:
 - `POST /api/v1/auth/register` – create a user account (email, nickname, password hashed with bcrypt).
 - `POST /api/v1/auth/login` – verify credentials against the local `AUTH_DB` store.
 - `POST /api/v1/web-intelligence` – perform a Brave web search (requires `BRAVE_API_KEY`).
-- `POST /api/v1/llm/chat` – send raw messages to the configured LLM provider (local llama.cpp, OpenAI, or Gemini).
+- `POST /api/v1/llm/chat` – send raw messages to the configured LLM provider (local llama.cpp or OpenAI).
 - `GET /api/v1/llm/config` – retrieve the active LLM provider, model and endpoint.
 - `POST /api/v1/llm/config` – update the LLM provider, model or endpoint at runtime.
 - `POST /api/v1/llm/upload` – upload a new `.gguf` model file and switch to it.
