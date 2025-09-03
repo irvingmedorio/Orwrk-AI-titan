@@ -76,11 +76,6 @@ const SettingsView: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
-            <label htmlFor="gemini-key" className="w-full sm:w-32 sm:text-right font-medium">{t('geminiKey')}</label>
-            <Input id="gemini-key" type="password" placeholder="Enter your Gemini API key" className="flex-1" />
-            <Button>{t('save')}</Button>
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
             <label htmlFor="gpt-key" className="w-full sm:w-32 sm:text-right font-medium">{t('gptKey')}</label>
             <Input id="gpt-key" type="password" placeholder="Enter your OpenAI GPT key" className="flex-1" />
             <Button>{t('save')}</Button>

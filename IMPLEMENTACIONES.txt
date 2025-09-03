@@ -1,0 +1,8 @@
+# Registro de implementaciones
+
+- 2025-09-02: Creación del archivo de registro de implementaciones.
+- 2025-09-02: Se agregó sistema de registro y autenticación con contraseñas encriptadas.
+- 2025-09-02: Integrado cliente LLM con soporte para modelo local y OpenAI, más endpoint `/api/v1/llm/chat`.
+- 2025-09-02: Integración de Google Drive y OneDrive mediante `/api/v1/cloud/*` y generación automática de planes con `/business-advisor/generate`.
+- 2025-09-02: Se añadieron endpoints `/api/v1/llm/config` y `/api/v1/llm/upload` para cambiar el modelo local dinámicamente.
+- 2025-09-02: Se implementó backend FastAPI con endpoints de agentes, chat, web-intelligence y procesamiento de voz usando modelo local LFM2-VL-1.6B.
