@@ -5,8 +5,9 @@ import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { MicVocalIcon, TrashIcon, SendIcon, PlusIcon, ImageIcon, VideoIcon, MicIcon, FileTextIcon, FileIcon } from '../components/icons';
 // FIX: Import DefaultAgentNames to use for agent name values.
-import { VoiceChatMessage, AgentName, FilePreview, AutomaticNote, DefaultAgentNames } from '../types';
+import { VoiceChatMessage, AgentName, FilePreview, AutomaticNote, AgendaItem, DefaultAgentNames } from '../types';
 import { Input } from '../components/ui/Input';
+import AgentProgressPanel from '../components/AgentProgressPanel';
 
 const fileToDataURL = (file: File): Promise<FilePreview> => {
   return new Promise((resolve, reject) => {
@@ -78,16 +79,40 @@ const AutomaticNoteItem: React.FC<{ note: AutomaticNote }> = ({ note }) => {
     );
 };
 
+const AgendaItemRow: React.FC<{ item: AgendaItem }> = ({ item }) => {
+    const { toggleAgendaItem, deleteAgendaItem } = useAgentStore();
+    return (
+        <div className="group flex items-center my-1 text-sm p-2 rounded-md hover:bg-dark-accent">
+            <input
+                type="checkbox"
+                checked={item.completed}
+                onChange={() => toggleAgendaItem(item.id)}
+                className="mr-2"
+            />
+            <span className={`flex-1 ${item.completed ? 'line-through text-dark-muted-foreground' : ''}`}>{item.content}</span>
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => deleteAgendaItem(item.id)}
+            >
+                <TrashIcon />
+            </Button>
+        </div>
+    );
+};
+
 const VoiceAgentView: React.FC = () => {
     const { t } = useTranslation();
-    const { voiceAgentState, toggleVoiceRecording, clearVoiceAgentState, addVoiceChatMessage, downloadPath, deleteAutomaticNote } = useAgentStore();
-    const { isRecording, voiceChatHistory, automaticNotes } = voiceAgentState;
+    const { voiceAgentState, toggleVoiceRecording, clearVoiceAgentState, addVoiceChatMessage, downloadPath, deleteAutomaticNote, addAgendaItem } = useAgentStore();
+    const { isRecording, voiceChatHistory, automaticNotes, agenda } = voiceAgentState;
     const [input, setInput] = useState('');
     const [files, setFiles] = useState<File[]>([]);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
+    const [agendaInput, setAgendaInput] = useState('');
 
      useEffect(() => {
         if (chatContainerRef.current) {
@@ -122,6 +147,12 @@ const VoiceAgentView: React.FC = () => {
 
         setInput('');
         setFiles([]);
+    };
+
+    const handleAddAgenda = () => {
+        if (agendaInput.trim() === '') return;
+        addAgendaItem(agendaInput.trim());
+        setAgendaInput('');
     };
     
     const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -171,6 +202,7 @@ const VoiceAgentView: React.FC = () => {
         { label: t('video'), icon: <VideoIcon />, accept: 'video/*' },
         { label: t('audio'), icon: <MicIcon />, accept: 'audio/*' },
         { label: t('document'), icon: <FileTextIcon />, accept: '.pdf,.doc,.docx,.txt,.md' },
+        { label: t('zip'), icon: <FileIcon />, accept: '.zip' },
     ];
 
     return (
@@ -251,27 +283,53 @@ const VoiceAgentView: React.FC = () => {
                    </Card>
                 </div>
 
-                {/* Right Panel: Automatic Notes */}
-                <Card className="flex flex-col min-h-0">
-                    <CardHeader className="flex flex-row justify-between items-center">
-                        <CardTitle>{t('automaticNotes')}</CardTitle>
-                        <div className="flex gap-2">
-                             <Button variant="outline" onClick={handleSave} disabled={automaticNotes.length === 0}>{t('saveNotes')}</Button>
-                             <Button variant="destructive" size="icon" onClick={clearVoiceAgentState} disabled={!isRecording && voiceChatHistory.length === 0}>
-                                 <TrashIcon />
-                             </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="flex-1 overflow-y-auto pr-2">
-                         {automaticNotes.length > 0 ? (
-                            <div className="space-y-1">
-                                {automaticNotes.map(note => <AutomaticNoteItem key={note.id} note={note} />)}
+                {/* Right Panel: Agent Progress, Automatic Notes and Agenda */}
+                <div className="flex flex-col gap-6 min-h-0">
+                    <AgentProgressPanel />
+                    <Card className="flex flex-col min-h-0">
+                        <CardHeader className="flex flex-row justify-between items-center">
+                            <CardTitle>{t('automaticNotes')}</CardTitle>
+                            <div className="flex gap-2">
+                                 <Button variant="outline" onClick={handleSave} disabled={automaticNotes.length === 0}>{t('saveNotes')}</Button>
+                                 <Button variant="destructive" size="icon" onClick={clearVoiceAgentState} disabled={!isRecording && voiceChatHistory.length === 0}>
+                                     <TrashIcon />
+                                 </Button>
                             </div>
-                         ) : (
-                             <p className="text-dark-muted-foreground italic">{t('notesPlaceholder')}</p>
-                         )}
-                    </CardContent>
-                </Card>
+                        </CardHeader>
+                        <CardContent className="flex-1 overflow-y-auto pr-2">
+                             {automaticNotes.length > 0 ? (
+                                <div className="space-y-1">
+                                    {automaticNotes.map(note => <AutomaticNoteItem key={note.id} note={note} />)}
+                                </div>
+                             ) : (
+                                 <p className="text-dark-muted-foreground italic">{t('notesPlaceholder')}</p>
+                             )}
+                        </CardContent>
+                    </Card>
+                    <Card className="flex flex-col min-h-0">
+                        <CardHeader>
+                            <CardTitle>{t('agenda')}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 overflow-y-auto pr-2">
+                            {agenda.length > 0 ? (
+                                <div className="space-y-1">
+                                    {agenda.map(item => <AgendaItemRow key={item.id} item={item} />)}
+                                </div>
+                            ) : (
+                                <p className="text-dark-muted-foreground italic">{t('noAgendaItems')}</p>
+                            )}
+                            <div className="flex mt-2">
+                                <Input
+                                    value={agendaInput}
+                                    onChange={e => setAgendaInput(e.target.value)}
+                                    placeholder={t('agendaPlaceholder')}
+                                    className="flex-1 mr-2"
+                                />
+                                <Button onClick={handleAddAgenda} variant="primary"><PlusIcon /></Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
             
             <input type="file" ref={fileInputRef} onChange={e => onFileSelect(e.target.files)} multiple className="hidden" />

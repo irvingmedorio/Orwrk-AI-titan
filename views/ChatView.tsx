@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAgentStore } from '../store/agentStore';
 // FIX: Import DefaultAgentNames to use for agent name values.
 import { AgentName, ChatMessage, FilePreview, AgentStatus, DeepReasoningStage, ApiActionSuggestion, ApiIntegrationId, WebIntelligenceSuggestion, CommandSuggestion, WebIntelligenceStatus, DefaultAgentNames } from '../types';
+import AgentProgressPanel from '../components/AgentProgressPanel';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
@@ -374,6 +375,7 @@ const ChatView: React.FC = () => {
     { label: t('video'), icon: <VideoIcon />, accept: 'video/*' },
     { label: t('audio'), icon: <MicIcon />, accept: 'audio/*' },
     { label: t('document'), icon: <FileTextIcon />, accept: '.pdf,.doc,.docx,.txt,.md' },
+    { label: t('zip'), icon: <FileIcon />, accept: '.zip' },
   ];
 
   const getPlaceholder = () => {
@@ -383,10 +385,11 @@ const ChatView: React.FC = () => {
   };
 
   return (
-    <div 
-      className={`flex flex-col h-full transition-colors ${isDragging ? 'bg-dark-accent/50' : ''}`}
-      onDragEnter={handleDragEvents} onDragOver={handleDragEvents} onDragLeave={handleDragEvents} onDrop={handleDrop}
-    >
+    <div className="flex h-full">
+      <div
+        className={`flex flex-col flex-1 transition-colors ${isDragging ? 'bg-dark-accent/50' : ''}`}
+        onDragEnter={handleDragEvents} onDragOver={handleDragEvents} onDragLeave={handleDragEvents} onDrop={handleDrop}
+      >
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <h2 className="text-3xl font-bold tracking-tight">
                 {t('agenChat')}
@@ -397,82 +400,86 @@ const ChatView: React.FC = () => {
             </div>
         </div>
 
-      <div 
-        ref={chatContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col bg-dark-secondary/50 rounded-lg border border-dark-border"
-      >
-        {chatMessages.map((msg) => (
-          <ChatBubble key={msg.id} message={msg} />
-        ))}
-      </div>
-      
-      <div className="mt-4">
-        <input type="file" ref={fileInputRef} onChange={e => onFileSelect(e.target.files)} multiple className="hidden" />
-        
-        {files.length > 0 && (
-            <div className="mb-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {files.map((file, index) => (
-                <div key={index} className="relative group bg-dark-secondary p-2 rounded-lg">
-                    {file.type.startsWith("image/") ? (
-                        <img src={URL.createObjectURL(file)} alt={file.name} className="w-full h-20 object-cover rounded"/>
-                    ) : (
-                        <div className="w-full h-20 flex flex-col items-center justify-center rounded"><FileIcon /></div>
-                    )}
-                    <p className="text-xs truncate mt-1">{file.name}</p>
-                    <button onClick={() => removeFile(index)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <TrashIcon />
-                    </button>
-                </div>
-            ))}
-            </div>
-        )}
-        
-        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-
-        <div className="relative flex items-center space-x-2">
-            <div className="relative">
-                <Button onClick={() => setIsMenuOpen(prev => !prev)} variant="ghost" size="icon">
-                    <PlusIcon />
-                </Button>
-                {isMenuOpen && (
-                    <div className="absolute bottom-full mb-2 w-48 bg-dark-secondary border border-dark-border rounded-md shadow-lg z-10">
-                        {menuOptions.map(option => (
-                             <button key={option.label} onClick={() => handleAttachmentClick(option.accept)} className="w-full text-left px-4 py-2 text-sm hover:bg-dark-accent flex items-center gap-2">
-                                {option.icon} {option.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
-            <Button 
-                onClick={() => { setIsDeepReasoning(prev => !prev); setIsWebIntelligence(false); }} 
-                variant={isDeepReasoning ? "secondary" : "ghost"} 
-                size="icon"
-                title={t('toggleDeepReasoning')}
-            >
-                <BrainCircuitIcon />
-            </Button>
-             <Button 
-                onClick={() => { setIsWebIntelligence(prev => !prev); setIsDeepReasoning(false); }} 
-                variant={isWebIntelligence ? "secondary" : "ghost"} 
-                size="icon"
-                title={t('toggleWebIntelligence')}
-            >
-                <GlobeIcon />
-            </Button>
-            <Input
-              type="text"
-              placeholder={getPlaceholder()}
-              value={input}
-              onChange={(e) => { setInput(e.target.value); setError(''); }}
-              onKeyDown={handleKeyPress}
-              className="flex-1"
-            />
-            <Button onClick={handleSend} variant="primary" className="p-3">
-              <SendIcon />
-              <span className="sr-only">{t('sendMessage')}</span>
-            </Button>
+        <div
+          ref={chatContainerRef}
+          className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col bg-dark-secondary/50 rounded-lg border border-dark-border"
+        >
+          {chatMessages.map((msg) => (
+            <ChatBubble key={msg.id} message={msg} />
+          ))}
         </div>
+
+        <div className="mt-4">
+          <input type="file" ref={fileInputRef} onChange={e => onFileSelect(e.target.files)} multiple className="hidden" />
+
+          {files.length > 0 && (
+              <div className="mb-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              {files.map((file, index) => (
+                  <div key={index} className="relative group bg-dark-secondary p-2 rounded-lg">
+                      {file.type.startsWith("image/") ? (
+                          <img src={URL.createObjectURL(file)} alt={file.name} className="w-full h-20 object-cover rounded"/>
+                      ) : (
+                          <div className="w-full h-20 flex flex-col items-center justify-center rounded"><FileIcon /></div>
+                      )}
+                      <p className="text-xs truncate mt-1">{file.name}</p>
+                      <button onClick={() => removeFile(index)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <TrashIcon />
+                      </button>
+                  </div>
+              ))}
+              </div>
+          )}
+
+          {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+
+          <div className="relative flex items-center space-x-2">
+              <div className="relative">
+                  <Button onClick={() => setIsMenuOpen(prev => !prev)} variant="ghost" size="icon">
+                      <PlusIcon />
+                  </Button>
+                  {isMenuOpen && (
+                      <div className="absolute bottom-full mb-2 w-48 bg-dark-secondary border border-dark-border rounded-md shadow-lg z-10">
+                          {menuOptions.map(option => (
+                               <button key={option.label} onClick={() => handleAttachmentClick(option.accept)} className="w-full text-left px-4 py-2 text-sm hover:bg-dark-accent flex items-center gap-2">
+                                  {option.icon} {option.label}
+                              </button>
+                          ))}
+                      </div>
+                  )}
+              </div>
+              <Button
+                  onClick={() => { setIsDeepReasoning(prev => !prev); setIsWebIntelligence(false); }}
+                  variant={isDeepReasoning ? "secondary" : "ghost"}
+                  size="icon"
+                  title={t('toggleDeepReasoning')}
+              >
+                  <BrainCircuitIcon />
+              </Button>
+               <Button
+                  onClick={() => { setIsWebIntelligence(prev => !prev); setIsDeepReasoning(false); }}
+                  variant={isWebIntelligence ? "secondary" : "ghost"}
+                  size="icon"
+                  title={t('toggleWebIntelligence')}
+              >
+                  <GlobeIcon />
+              </Button>
+              <Input
+                type="text"
+                placeholder={getPlaceholder()}
+                value={input}
+                onChange={(e) => { setInput(e.target.value); setError(''); }}
+                onKeyDown={handleKeyPress}
+                className="flex-1"
+              />
+              <Button onClick={handleSend} variant="primary" className="p-3">
+                <SendIcon />
+                <span className="sr-only">{t('sendMessage')}</span>
+              </Button>
+          </div>
+        </div>
+      </div>
+      <div className="hidden lg:block w-80 ml-4">
+        <AgentProgressPanel />
       </div>
     </div>
   );

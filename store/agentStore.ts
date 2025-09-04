@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Agent, AgentName, AgentStatus, SystemMetrics, LlmMetrics, ChatMessage, ConfirmationState, ScheduledTask, TaskStatus, View, TaskSuggestion, ChatSession, Project, ProjectStatus, AutomationFlow, AutomationSession, AutomationCommand, AutomationCommandStatus, AutomationCommandType, FileSystemItem, FileType, TerminalLine, CommandSuggestion, WebIntelligenceSuggestion, DeepReasoningState, DeepReasoningStage, ApiIntegration, ApiIntegrationId, ApiActionSuggestion, WebIntelligenceMission, WebIntelligenceStatus, VoiceAgentState, VoiceChatMessage, AutomaticNote, EditableAgent, DefaultAgentNames } from '../types';
+import { Agent, AgentName, AgentStatus, SystemMetrics, LlmMetrics, ChatMessage, ConfirmationState, ScheduledTask, TaskStatus, View, TaskSuggestion, ChatSession, Project, ProjectStatus, AutomationFlow, AutomationSession, AutomationCommand, AutomationCommandStatus, AutomationCommandType, FileSystemItem, FileType, TerminalLine, CommandSuggestion, WebIntelligenceSuggestion, DeepReasoningState, DeepReasoningStage, ApiIntegration, ApiIntegrationId, ApiActionSuggestion, WebIntelligenceMission, WebIntelligenceStatus, VoiceAgentState, VoiceChatMessage, AutomaticNote, AgendaItem, EditableAgent, DefaultAgentNames } from '../types';
 
 type Language = 'en' | 'es';
 
@@ -61,6 +61,9 @@ interface AgentState {
   addVoiceChatMessage: (message: VoiceChatMessage) => void;
   generateNote: (noteText: string) => void;
   deleteAutomaticNote: (noteId: string) => void;
+  addAgendaItem: (content: string) => void;
+  toggleAgendaItem: (itemId: string) => void;
+  deleteAgendaItem: (itemId: string) => void;
   clearVoiceAgentState: () => void;
 }
 
@@ -82,6 +85,7 @@ const initialVoiceAgentState: VoiceAgentState = {
     isRecording: false,
     voiceChatHistory: [],
     automaticNotes: [],
+    agenda: [],
 };
 
 const initialScheduledTasks: ScheduledTask[] = [
@@ -106,7 +110,7 @@ const initialScheduledTasks: ScheduledTask[] = [
 
 const initialChatHistory: ChatSession[] = [
     { id: 'chat-session-1', title: 'Research on Q3 competitor earnings...', timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), model: 'LFM2-VL-1.6B' },
-    { id: 'chat-session-2', title: 'Drafting a project plan for the new API.', timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), model: 'gemini-2.5-flash' },
+    { id: 'chat-session-2', title: 'Drafting a project plan for the new API.', timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), model: 'gpt-4o-mini' },
 ];
 
 const initialProjects: Project[] = [
@@ -616,6 +620,24 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       voiceAgentState: {
           ...state.voiceAgentState,
           automaticNotes: state.voiceAgentState.automaticNotes.filter(note => note.id !== noteId),
+      }
+  })),
+  addAgendaItem: (content: string) => set(state => ({
+      voiceAgentState: {
+          ...state.voiceAgentState,
+          agenda: [...state.voiceAgentState.agenda, { id: `agenda-${Date.now()}`, content, completed: false }],
+      }
+  })),
+  toggleAgendaItem: (itemId: string) => set(state => ({
+      voiceAgentState: {
+          ...state.voiceAgentState,
+          agenda: state.voiceAgentState.agenda.map(item => item.id === itemId ? { ...item, completed: !item.completed } : item),
+      }
+  })),
+  deleteAgendaItem: (itemId: string) => set(state => ({
+      voiceAgentState: {
+          ...state.voiceAgentState,
+          agenda: state.voiceAgentState.agenda.filter(item => item.id !== itemId),
       }
   })),
   clearVoiceAgentState: () => set({ voiceAgentState: initialVoiceAgentState }),

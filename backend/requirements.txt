@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+pydantic
+langchain
+autogen
+chromadb
+celery
+redis
+python-dotenv
+httpx
+docker
+apscheduler
+bcrypt
+openai
+google-generativeai
