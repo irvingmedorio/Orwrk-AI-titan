@@ -222,7 +222,18 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     }]
   })),
   editAgent: (agentName, updates) => set(state => ({
-    agents: state.agents.map(a => a.name === agentName ? { ...a, ...updates } : a)
+    agents: state.agents.map(a => {
+      if (a.name !== agentName) return a;
+
+      const { modelFile, ...rest } = updates;
+      return {
+        ...a,
+        ...rest,
+        ...(modelFile !== undefined
+          ? { modelFile: typeof modelFile === 'string' ? modelFile : modelFile?.name }
+          : {}),
+      };
+    }),
   })),
   deleteAgent: (agentName) => set(state => ({
     agents: state.agents.filter(a => a.name !== agentName)
@@ -574,6 +585,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
                 isRecording: true,
                 voiceChatHistory: [initialMessage],
                 automaticNotes: [],
+                agenda: state.voiceAgentState.agenda,
             }
         };
     }
