@@ -15,6 +15,7 @@ import SystemOperationsView from './views/SystemOperationsView';
 import ConfirmationModal from './components/ConfirmationModal';
 import { useSimulation } from './hooks/useSimulation';
 import VoiceAgentView from './views/VoiceAgentView';
+import NotificationPanel from './components/NotificationPanel';
 
 const App: React.FC = () => {
   const { 
@@ -63,6 +64,9 @@ const App: React.FC = () => {
       <main className="flex-1 p-6 overflow-y-auto">
         {renderView()}
       </main>
+      <div className="fixed top-4 right-4 w-96 space-y-4">
+        <NotificationPanel />
+      </div>
       {confirmation.isActive && (
         <ConfirmationModal
           message={confirmation.message}
